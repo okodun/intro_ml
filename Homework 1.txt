@@ -1,0 +1,5 @@
+1. QuillBot
+QuillBot is an AI application similar to Grammarly. It corrects grammatical errors in a target language and provides information on how to improve your writing. I use QuillBot to correct any grammatical errors and prevent using unclear language when I have to write a paper or report for university.
+
+2. Apple's FaceID
+FaceID is Apple's biometric authentication system available for some of its products (iPhone, iPad, Mac). FaceID utilizes machine learning techniques (see https://support.apple.com/en-us/102381) for facial recognition. I use FaceID to unlock my device and authenticate myself when buying things online.
