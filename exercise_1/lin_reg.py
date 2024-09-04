@@ -1,5 +1,33 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.backend_bases import MouseButton
+
+# define x and y points
+x_points = []
+y_points = []
+
+
+def on_click(event):
+
+    # get left click
+    if event.button is MouseButton.LEFT:
+        # save coordinates
+        x_points.append(event.xdata)
+        y_points.append(event.ydata)
+
+        # plot scatter
+        plt.plot(event.xdata, event.ydata, "kx")
+        plt.show()
+
+    # get right click
+    elif event.button is MouseButton.RIGHT and len(x_points) > 1:
+        plt.clf()
+        plt.plot(x_points, y_points, "kx")
+        a, b = my_linfit(np.array(x_points), np.array(y_points))
+        xp = np.arange(-2, 5, 0.1)
+        plt.plot(xp, a * xp + b, "r-")
+        print(f"My_fit: a={a} and b={b}")
+        plt.show()
 
 
 def my_linfit(x, y):
@@ -17,11 +45,6 @@ def my_linfit(x, y):
 
 
 if __name__ == "__main__":
-    x = np.random.uniform(-2, 5, 10)
-    y = np.random.uniform(0, 3, 10)
-    a, b = my_linfit(x, y)
-    plt.plot(x, y, "kx")
-    xp = np.arange(-2, 5, 0.1)
-    plt.plot(xp, a * xp + b, "r-")
-    print(f"My_fit: a={a} and b={b}")
+    plt.plot([], [], "kx")
+    plt.connect("button_press_event", on_click)
     plt.show()
