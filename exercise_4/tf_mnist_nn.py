@@ -29,12 +29,8 @@ if __name__ == "__main__":
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
     # reshape matrices
-    x_train_reshaped = np.reshape(
-        x_train, (x_train.shape[0], x_train.shape[1] * x_train.shape[1])
-    )
-    x_test_reshaped = np.reshape(
-        x_test, (x_test.shape[0], x_test.shape[1] * x_test.shape[1])
-    )
+    x_train_reshaped = np.reshape(x_train, (x_train.shape[0], -1))
+    x_test_reshaped = np.reshape(x_test, (x_test.shape[0], -1))
 
     # fit model
     knn = KNeighborsClassifier()
