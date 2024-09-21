@@ -12,11 +12,17 @@ def class_acc(pred, gt):
 
 
 class FullBayesClassifier:
+    """implementation of Bayes' classifier for MNIST"""
+
     def __init__(self):
+        """creates a new FullBayesClassifier instance"""
+
         self.MEANS = None
         self.COVARIANCES = None
 
     def fit(self, x, y):
+        """fits the data by calculating mean vectors and covariance matrices"""
+
         means = []
         covariances = []
 
@@ -26,16 +32,26 @@ class FullBayesClassifier:
             means.append(np.mean(x[y == i], axis=0))
             covariances.append(np.cov(x[y == i], rowvar=False))
 
+        # convert results to numpy arrays and save them
         self.MEANS = np.array(means)
         self.COVARIANCES = np.array(covariances)
 
     def predict(self, x):
+        """predicts the class labels of x"""
+
+        # define class labels and create array for likelihoods
         classes = self.MEANS.shape[0]
         likelihoods = np.zeros((x.shape[0], classes))
+
+        # calculate likelihoods
         for k in range(classes):
+
+            # compute likelihood for all samples per class
             likelihoods[:, k] = multivariate_normal.logpdf(
                 x, mean=fbc.MEANS[k], cov=fbc.COVARIANCES[k]
             )
+
+        # return index of maximum likelihood per sample
         return np.argmax(likelihoods, axis=1)
 
 
@@ -66,8 +82,6 @@ if __name__ == "__main__":
     # classify test data
     fbc = FullBayesClassifier()
     fbc.fit(x_train_reshaped, y_train)
-
-    # predict
     pred = fbc.predict(x_test_reshaped)
 
     # print prediction
