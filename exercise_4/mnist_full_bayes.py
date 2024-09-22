@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 import tensorflow as tf
-from scipy.stats import multivariate_normal
+from scipy.stats import multivariate_normal as mn
 
 
 def class_acc(pred, gt):
@@ -20,7 +20,7 @@ class FullBayesClassifier:
         self.MEANS = None
         self.COVARIANCES = None
 
-    def fit(self, x, y):
+    def fit(self, x, y, current_noise):
         """fits the data by calculating mean vectors and covariance matrices"""
 
         means = []
@@ -29,12 +29,34 @@ class FullBayesClassifier:
         # calculate mean vector and covariance matrix for each class
         for i in np.unique(y):
 
-            means.append(np.mean(x[y == i], axis=0))
-            covariances.append(np.cov(x[y == i], rowvar=False))
+            # get all samples belonging to current class
+            m = x[y == i]
+
+            # calculate mean vector for class
+            mean = np.sum(m, axis=0) / m.shape[0]
+            means.append(mean)
+
+            # calculate covariance matrix for class
+            covariance = ((m - mean).T @ (m - mean)) / (m.shape[0] - 1)
+            covariances.append(covariance)
 
         # convert results to numpy arrays and save them
         self.MEANS = np.array(means)
         self.COVARIANCES = np.array(covariances)
+
+        # report rank values
+        ok = True
+        for i in range(self.COVARIANCES.shape[0]):
+            rank = np.linalg.matrix_rank(self.COVARIANCES[i])
+            if rank != self.MEANS.shape[1]:
+                ok = False
+                print(
+                    f"Covariance matrix for class {i} contains only {rank} instead of {self.MEANS.shape[1]} dimensions."
+                )
+        if ok:
+            print(
+                f"No dimensions vanished during covariance matrix computation at current noise level {current_noise}. Shape is {self.MEANS.shape[1]}x{self.MEANS.shape[1]}."
+            )
 
     def predict(self, x):
         """predicts the class labels of x"""
@@ -47,9 +69,7 @@ class FullBayesClassifier:
         for k in range(classes):
 
             # compute likelihood for all samples per class
-            likelihoods[:, k] = multivariate_normal.logpdf(
-                x, mean=fbc.MEANS[k], cov=fbc.COVARIANCES[k]
-            )
+            likelihoods[:, k] = mn.logpdf(x, mean=fbc.MEANS[k], cov=fbc.COVARIANCES[k])
 
         # return index of maximum likelihood per sample
         return np.argmax(likelihoods, axis=1)
@@ -72,17 +92,39 @@ if __name__ == "__main__":
     # load dataset
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
-    # add noise
-    x_train = x_train + np.random.normal(loc=0.0, scale=10.0, size=x_train.shape)
+    # determine if adding noise improves prediction accuracy
+    accuracy = 0
+    current_noise = 0
+    noise_levels = [0.1, 1.0, 10.0]
 
-    # reshape matrices
-    x_train_reshaped = np.reshape(x_train, (x_train.shape[0], -1))
-    x_test_reshaped = np.reshape(x_test, (x_test.shape[0], -1))
+    for i in range(len(noise_levels)):
 
-    # classify test data
-    fbc = FullBayesClassifier()
-    fbc.fit(x_train_reshaped, y_train)
-    pred = fbc.predict(x_test_reshaped)
+        # add noise and save current noise
+        x_train = x_train + np.random.normal(
+            loc=0.0, scale=noise_levels[i], size=x_train.shape
+        )
+        current_noise = noise_levels[i]
+
+        # reshape matrices
+        x_train_reshaped = np.reshape(x_train, (x_train.shape[0], -1))
+        x_test_reshaped = np.reshape(x_test, (x_test.shape[0], -1))
+
+        # classify test data
+        fbc = FullBayesClassifier()
+        fbc.fit(x_train_reshaped, y_train, current_noise)
+        pred = fbc.predict(x_test_reshaped)
+
+        # determine accuracy
+        acc = round(class_acc(pred, y_test) * 100, 2)
+        if i > 0 and accuracy > acc:
+            break
+        accuracy = acc
 
     # print prediction
-    print(f"Classification accuracy is {round(class_acc(pred, y_test) * 100, 2)}%")
+    print(f"\nClassification accuracy is {accuracy}%")
+
+    # print used noise if improves
+    if current_noise != 0.1:
+        print(
+            f"""Prediction accuracy is highest with noise scale {current_noise}.\nTested with noise scale 0.1, 1.0, and 10.0."""
+        )

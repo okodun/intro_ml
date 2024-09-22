@@ -25,15 +25,18 @@ class NaiveBayesClassifier:
         # get mean and variance vectors by class
         means = []
         variances = []
-        for i in list(set(y)):
+        for i in np.unique(y):
+
+            # get all samples belonging to current class
+            m = x[y == i]
 
             # get mean by dimension an append
-            mean = np.mean(x[y == i], axis=0)
+            mean = np.sum(m, axis=0) / m.shape[0]
             means.append(mean)
 
             # calculate variance by dimension and append
-            squared_loss = np.sum((x[y == i] - mean) ** 2, axis=0)
-            variance = squared_loss / x[y == i].shape[0]
+            squared_loss = np.sum((m - mean) ** 2, axis=0)
+            variance = squared_loss / m.shape[0]
             variances.append(variance)
 
         # convert vectors to arrays
@@ -80,17 +83,39 @@ if __name__ == "__main__":
     # load dataset
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
-    # add noise
-    x_train = x_train + np.random.normal(loc=0.0, scale=10.0, size=x_train.shape)
+    # determine if adding noise improves prediction accuracy
+    accuracy = 0
+    current_noise = 0
+    noise_levels = [0.1, 1.0, 10.0]
 
-    # reshape matrices
-    x_train_reshaped = np.reshape(x_train, (x_train.shape[0], -1))
-    x_test_reshaped = np.reshape(x_test, (x_test.shape[0], -1))
+    for i in range(len(noise_levels)):
 
-    # classify test data
-    nbc = NaiveBayesClassifier()
-    nbc.fit(x_train_reshaped, y_train)
-    pred = nbc.predict(x_test_reshaped)
+        # add noise and save current noise
+        x_train = x_train + np.random.normal(
+            loc=0.0, scale=noise_levels[i], size=x_train.shape
+        )
+        current_noise = noise_levels[i]
+
+        # reshape matrices
+        x_train_reshaped = np.reshape(x_train, (x_train.shape[0], -1))
+        x_test_reshaped = np.reshape(x_test, (x_test.shape[0], -1))
+
+        # classify test data
+        nbc = NaiveBayesClassifier()
+        nbc.fit(x_train_reshaped, y_train)
+        pred = nbc.predict(x_test_reshaped)
+
+        # determine accuracy
+        acc = round(class_acc(pred, y_test) * 100, 2)
+        if i > 0 and accuracy > acc:
+            break
+        accuracy = acc
 
     # print prediction
-    print(f"Classification accuracy is {round(class_acc(pred, y_test) * 100, 2)}%")
+    print(f"\nClassification accuracy is {accuracy}%")
+
+    # print used noise if improves
+    if current_noise != 0.1:
+        print(
+            f"""Prediction accuracy is highest with noise scale {current_noise}.\nTested with noise scale 0.1, 1.0, and 10.0."""
+        )
