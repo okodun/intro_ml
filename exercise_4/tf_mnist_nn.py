@@ -40,4 +40,4 @@ if __name__ == "__main__":
     pred = knn.predict(x_test_reshaped)
 
     # print prediction
-    print(f"Classification accuracy is {round(class_acc(pred, y_test) * 100, 2)}%")
+    print(f"Classification accuracy is {round(class_acc(pred, y_test) * 100, 2)}%\n")

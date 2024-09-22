@@ -126,5 +126,5 @@ if __name__ == "__main__":
     # print used noise if improves
     if current_noise != 0.1:
         print(
-            f"""Prediction accuracy is highest with noise scale {current_noise}.\nTested with noise scale 0.1, 1.0, and 10.0."""
+            f"""Prediction accuracy is highest with noise scale {current_noise}.\nTested with noise scale 0.1, 1.0, and 10.0.\n"""
         )
