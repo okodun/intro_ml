@@ -63,10 +63,3 @@ plt.plot(tr_hist.history["loss"])
 plt.ylabel("loss")
 plt.xlabel("epoch")
 plt.show()
-
-# 0.1 -> 30.22%
-# 0.2 -> 37.54%
-# 0.3 -> 51.70%
-# 0.4 -> 30.05%
-# 0.3 (100) -> 42.83%
-# 0.2 (50n/30) -> 93.55%
