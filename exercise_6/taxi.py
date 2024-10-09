@@ -1,3 +1,4 @@
+import time
 import numpy as np
 import gymnasium as gym
 
@@ -71,7 +72,7 @@ class Agent:
         # save Q-Table
         self.QTABLE = qtable
 
-    def evaluate(self, max_range=1000):
+    def evaluate(self, max_range=1000, visual=False):
         """evaluates the found solution"""
 
         # initialize result variables
@@ -81,12 +82,21 @@ class Agent:
         # reset environment
         state = self.ENVIRONMENT.reset()[0]
 
+        # show gameplay if visual is set to true
+        if visual:
+            print(env.render())
+
         # start playing the game
         for step in range(max_range):
 
             # choose action and execute it
             action = np.argmax(self.QTABLE[state, :])
             new_state, reward, done, _, _ = env.step(action)
+
+            # show gameplay if visual is set to true
+            if visual:
+                time.sleep(0.5)
+                print(env.render())
 
             # update reward and state
             total_reward += reward
@@ -126,6 +136,9 @@ if __name__ == "__main__":
         total_num_of_actions += evaluation[1]
 
     # print result
-    print(f"The agent produced an average reward of {total_reward / N}.")
-    print(f"He took {total_num_of_actions / N} steps on average to solve the problem.")
-    print(f"The agent solved {N} different problems.")
+    result_string = f"""
+    The agent achieved an average reward of {total_reward / N:.2f}.
+    On average, it took {total_num_of_actions / N:.2f} steps to solve each problem.
+    The agent successfully solved {N} different problems.
+    """
+    print(result_string)
